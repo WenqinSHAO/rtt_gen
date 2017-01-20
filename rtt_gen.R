@@ -149,7 +149,7 @@ congest.trace <- function(trace, len) {
           cong.amplitude <- (rgeom(1,0.5)+1) * runif(1, 20, 50) # amplitude of congestion segment
         }
       } else {
-        trace[j] <- trace[j] + rpois(1, cong.amplitude)
+        trace[j] <- trace[j] + max(0, (rpois(1,cong.amplitude^1.5) - cong.amplitude^1.5 + cong.amplitude))
         if (rbinom(1,1,beta) == 1) {
           # leaving congestion
           cong.stat <- F
