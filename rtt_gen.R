@@ -1,8 +1,8 @@
 # 1/ number of stages for a given total length
-# 2/ length distribution of each stage
+# 2/ length of each stage
 # 3/ baseline RTT value for each stage
-# 4/ additional deviation and spikes
-# 5/ generative model for long during congestion
+# 4/ additional noises/deviations
+# 5/ long during congestion
 
 k.stage <- function(n) {
   # number of stages within n data points
@@ -16,9 +16,10 @@ k.stage <- function(n) {
   # Note:
   #   with larger n, the generated traces tend to have more stages
   #   there should as well be a reasonable up-bound for stage numbers
-  #   we consider a shortest stage of 10 data points, the max k should be around floor(n/10)
+  #   we upbound the max k to floor(n/10)
+  #
   r = rpois(1, floor(sqrt(n)/log(n)))
-  return(ifelse(r < floor(n/10), r, floor(n/10)))
+  return(min(r, floor(n/10)))
 }
 
 len.stage <- function(n, k) {
@@ -31,14 +32,11 @@ len.stage <- function(n, k) {
   # Returns:
   #  int vector of length k, the sum of which equals n
   #
-  # Note:
-  #   Possible patterns:
-  #   1/ one or two dominant stages (paths); with several short living ones (first implement this case)
-  #   2/ mixture of dominant stages (paths); and LB-like equivelant short living paths
   if(k>1) {
-    e <- floor(n/(k*(k-1)))
+    e <- floor(n/(k*(k-1))) # e ensures that there first k-1 stage don cosume the entire length
     len <- vector()
     for(i in seq_len(k-1)) {
+      # 50 as lowerbound avoids very-short stages
       len <- append(len, floor(runif(1, 50, n/k+e)))
     }
     len <- append(len, n-sum(len))
@@ -108,13 +106,6 @@ noise.trace <- function(trace, len) {
   return(trace)
 }
 
-test.noise.trace <- function(n) {
-  k <- k.stage(n)
-  len <- len.stage(n, k)
-  stage <- stage.trace(len, baseline.stage(k))
-  return(noise.trace(stage, len))
-}
-
 congest.trace <- function(trace, len) {
   # given a trace, add long during congestion effect
   #
@@ -135,9 +126,10 @@ congest.trace <- function(trace, len) {
     alpha <- min(abs(rnorm(1, mean=0, sd=.005)), .01)
     # beta is proba of exiting congestion
     beta <- min(max(abs(rnorm(1, mean=0, sd=.1)), .01), .1)
-    cong.stat <- F
-    cong.amplitude <- 0
-    cong.var.amplitude <- 0
+    # a status machine of two status: in congestion, outside congestion
+    cong.stat <- F # status
+    cong.amplitude <- 0 # congestion amplitude
+    cong.var.amplitude <- 0 # RTT variation within congestion
     idx = (sum(len[1:i])-len[i]) + seq(1, len[i], 1)
     for (j in idx){
       if (! cong.stat) {
@@ -147,8 +139,9 @@ congest.trace <- function(trace, len) {
           if ((j+1)<length(trace)){
             cpt[j+1] <- 1
           }
-          cong.amplitude <- (rgeom(1,0.5)+1) * runif(1, 20, 50) # amplitude of congestion segment
-          cong.var.amplitude <- max(rnorm(1, mean = cong.amplitude, sd=10), 5)
+          cong.amplitude <- (rgeom(1,0.5)+1) * runif(1, 20, 50)
+          # RTT vairation relates to the congestion amplitude but not totally
+          cong.var.amplitude <- max(rnorm(1, mean = cong.amplitude, sd=10), 5) 
         }
       } else {
         trace[j] <- trace[j] + 
