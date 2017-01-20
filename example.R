@@ -1,5 +1,5 @@
 library(ggplot2)
-
+# library(plotly) # useful for interactive visual inspection
 
 source('rtt_gen.R')
 
@@ -18,10 +18,12 @@ for (i in 1:100){
   pdf(sprintf("%d.pdf", i), width = 12, height = 6)
   g <- ggplot(rtt, aes(x=seq_len(nrow(rtt)), y=trace)) +
     geom_line(size=.3) +
+    # geom_point(aes(text=paste("Index:", seq_len(nrow(rtt)))), size=0) +
     geom_vline(xintercept = which(rtt$cpt == 1), col='red', size=1, alpha=.4) +
     xlab("Index") +
     ylab("RTT (ms)") +
     theme(text=element_text(size=20))
   print(g)
+  # ggplotly(g)
   dev.off()
 }
