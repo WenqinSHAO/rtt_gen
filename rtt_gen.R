@@ -101,7 +101,10 @@ noise.trace <- function(trace, len) {
   #   should these noises be considered change, in general no
   for (i in seq(length(len))) {
     idx = (sum(len[1:i])-len[i]) + seq(1, len[i], 1)
-    trace[idx] <- trace[idx] + rexp(len[i], rate=runif(1, 0.5, 5))
+    gamma <- min(abs(rnorm(1, mean=0, sd=.001)), .002)
+    trace[idx] <- trace[idx] + rexp(len[i], rate=runif(1, 0.5, 5)) +
+      # spikes
+      rbinom(length(idx), 1, gamma) * runif(length(idx), 400, 800)
   }
   return(trace)
 }
