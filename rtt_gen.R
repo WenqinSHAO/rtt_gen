@@ -137,6 +137,7 @@ congest.trace <- function(trace, len) {
     beta <- min(max(abs(rnorm(1, mean=0, sd=.1)), .01), .1)
     cong.stat <- F
     cong.amplitude <- 0
+    cong.var.amplitude <- 0
     idx = (sum(len[1:i])-len[i]) + seq(1, len[i], 1)
     for (j in idx){
       if (! cong.stat) {
@@ -147,9 +148,11 @@ congest.trace <- function(trace, len) {
             cpt[j+1] <- 1
           }
           cong.amplitude <- (rgeom(1,0.5)+1) * runif(1, 20, 50) # amplitude of congestion segment
+          cong.var.amplitude <- max(rnorm(1, mean = cong.amplitude, sd=10), 5)
         }
       } else {
-        trace[j] <- trace[j] + max(0, (rpois(1,cong.amplitude^1.5) - cong.amplitude^1.5 + cong.amplitude))
+        trace[j] <- trace[j] + 
+          max(0, (rpois(1,cong.var.amplitude^1.5) - cong.var.amplitude^1.5 + cong.amplitude))
         if (rbinom(1,1,beta) == 1) {
           # leaving congestion
           cong.stat <- F
