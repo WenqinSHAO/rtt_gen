@@ -18,21 +18,23 @@ g <- ggplot(rtt, aes(x=seq_len(nrow(rtt)), y=trace)) +
     xlab("Index") +
     ylab("RTT (ms)") +
     theme(text=element_text(size=20))
- print(g)
+print(g)
 ```
-
-With the above code, one can obtain an instantly generated RTT time series,
-marked with moments when changes take place (red vertical lines).
-![Example of generated RTT time series](example.png)
 
 __sample.rtt$trace__ contains the RTT trace, while in __sample.rtt$cpt__
 indexes where a significant change happens to the generated RTT trace are flagged
 to 1. 
 
+With the above code, one can obtain an instantly generated RTT time series,
+marked with moments when changes take place (red vertical lines).
+
+![Example of generated RTT time series](example.png)
+
 # How RTT trace is generated?
 Two types of changes are simulated: stage-like change due to path change and
 RTT deviation from baseline caused by long during congestion. 
 The generation follows the steps given below:
+
 1. generate the number of stages;
 2. generate the length for each stage;
 3. generate the RTT baseline value for each stage;
